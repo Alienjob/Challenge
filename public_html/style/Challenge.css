@@ -1,10 +1,42 @@
-/*
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
-*/
-/* 
-    Created on : 04.09.2014, 11:44:21
-    Author     : user
-*/
+.challenge      {background:whitesmoke; padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+.challengeGreen {background:#F0FFF0;    padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+.challengeRed   {background:#FFF5EE;    padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+
+.challenge .resut {float:right;}
+.challenge .scale {float:left;}
+.challenge .vopros {font-size:30px; padding:10px;}
+.challenge .otvet input {display:block; width:200px; height:30px; font-size:20px; margin:10px auto; text-align:center;}
+.challenge .otvetDisable input {display:block; width:200px; height:30px; font-size:20px; margin:10px auto; text-align:center;}
+.challenge .latest{}
+
+.challengeGreen .resut {float:right;}
+.challengeGreen .scale {float:left;}
+.challengeGreen .vopros {font-size:30px; padding:10px;}
+.challengeGreen .otvet input {display:block; width:200px; height:30px; font-size:20px; margin:10px auto; text-align:center;}
+.challengeGreen .otvetDisable input {display:block; width:200px; height:30px; font-size:20px; margin:10px auto; text-align:center;}
+.challengeGreen .latest{}
+
+.challengeRed .resut {float:right;}
+.challengeRed .scale {float:left;}
+.challengeRed .vopros {font-size:30px; padding:10px;}
+.challengeRed .otvet input {display:block; width:200px; height:30px; font-size:20px; margin:10px auto; text-align:center;}
+.challengeRed .otvetDisable input {display:block; width:200px; height:30px; font-size:20px; margin:10px auto; text-align:center;}
+.challengeRed .latest {}
+
+.ChallengeContainer {background:whitesmoke; padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+.ChallengeHeader {text-align:left;}
+.ChallengeButtonsGroup {float:right;}
+.ChallengeScoreContainer {}
+.ChallengeComboContainer {}
+.ChallengeName {display:inline;}
+.ChallengeSocial {display:inline;}
+.ChallengeStat {display:inline;}
+.ChallengeHelp {display:inline;}
+.ChallengeComboTime {}
+.ChallengeComboLevel {}
+.ChallengeScore {}
+.ChallengeQuestion {}
+.ChallengeAnswer {}
+.ChallengeOldQuestion {}
+
 

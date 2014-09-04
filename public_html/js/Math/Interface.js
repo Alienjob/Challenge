@@ -1,56 +1,66 @@
 /** @jsx React.DOM */
 
-
+var defaultData = {
+    name : "Упражнение",    //заголовок упражнения
+    state:0,                //статус - 0- нейтрально, 1- положиьельно, 2- отрицательно, 3 - заблокировано
+    lastTime : -1,          //время последенго верного ответа. Если <0 то либо ответа не было либо он не верен
+    level : 0,              //уровень набранного комбо. от 0 до 10
+    score: 0,               //набранные очки
+    question:"Вопрос",      //Строка вопроса
+    oldQuestion:"Прошлый вопрос" //Строка описывающая предыдущий вопрос
+};
 
 
 //ChallengeContainer
-var RChallengeContainer = React.createClass({ 
+var rChallengeContainer = React.createClass({ 
   render: function() {
     return (
       <div className="ChallengeContainer">
-        <RChallengeHeader/>
-        <RChallengeScoreContainer/>
-        <RChallengeQuestion/>
-        <RChallengeAnswer/>
-        <RChallengeOldQuestion/>
+        <rChallengeHeader data = {this.props.data.name}/>
+        <rChallengeScoreContainer data = {{lastTime : this.props.data.lastTime, level : this.props.data.level, score : this.props.data.score}}/>
+        <rChallengeQuestion data = {this.props.data.question}/>
+        <rChallengeAnswer/>
+        <rChallengeOldQuestion data = {this.props.data.oldQuestion}/>
       </div>
     );
   }
   });
 
 //ChallengeHeader
-var RChallengeHeader = React.createClass({
+var rChallengeHeader = React.createClass({
   render: function() {
     return (
       <div className="ChallengeHeader">
-        <RChallengeName/>
-        <RChallengeSocial/>
-        <RChallengeStat/>
-        <RChallengeHelp/>
+        <rChallengeName data = {this.props.data}/>
+        <div  className="ChallengeButtonsGroup">
+            <rChallengeSocial/>
+            <rChallengeStat/>
+            <rChallengeHelp/>
+        </div>
       </div>
     );
   }
   });
 
 //ChallengeScoreContainer
-var RChallengeScoreContainer = React.createClass({
+var rChallengeScoreContainer = React.createClass({
   render: function() {
     return (
       <div className="ChallengeScoreContainer">
-        <RChallengeComboContainer/>
-        <RChallengeScore/>
+        <rChallengeComboContainer   data = {{lastTime : this.props.data.lastTime, level : this.props.data.level}} />
+        <rChallengeScore            data = {this.props.data.score}/>
       </div>
     );
   }
   });
 
 //ChallengeComboContainer
-var RChallengeComboContainer = React.createClass({
+var rChallengeComboContainer = React.createClass({
   render: function() {
     return (
       <div className="ChallengeComboContainer">
-        <RChallengeComboTime/>
-        <RChallengeComboLevel/>
+        <rChallengeComboTime data = {this.props.data.lastTime}/>
+        <rChallengeComboLevel data = {this.props.data.level}/>
       </div>
     );
   }
@@ -59,18 +69,21 @@ var RChallengeComboContainer = React.createClass({
 
 
 // ChallengeName
-var RChallengeName = React.createClass({
+var rChallengeName = React.createClass({
   render: function() {
+    var cValue = "Name";
+    if(this.props.data !== undefined )
+        cValue  = this.props.data;
     return (
       <div className="ChallengeName">
-          Name
+            {cValue}
       </div>
     );
   }
   });
   
 //ChallengeSocial
-var RChallengeSocial = React.createClass({
+var rChallengeSocial = React.createClass({
   render: function() {
     return (
       <div className="ChallengeSocial">
@@ -81,7 +94,7 @@ var RChallengeSocial = React.createClass({
   });
 
 //ChallengeStat
-var RChallengeStat = React.createClass({
+var rChallengeStat = React.createClass({
   render: function() {
     return (
       <div className="ChallengeStat">
@@ -92,7 +105,7 @@ var RChallengeStat = React.createClass({
   });
 
 //ChallengeHelp
-var RChallengeHelp = React.createClass({
+var rChallengeHelp = React.createClass({
   render: function() {
     return (
       <div className="ChallengeHelp">
@@ -105,33 +118,42 @@ var RChallengeHelp = React.createClass({
 
 
 //ChallengeComboTime
-var RChallengeComboTime = React.createClass({
+var rChallengeComboTime = React.createClass({
   render: function() {
-    return (
+   var cValue = "Combo time : ";
+    if(this.props.data !== undefined )
+        cValue  += this.props.data;
+     return (
       <div className="ChallengeComboTime">
-          Combo time
+          {cValue}
       </div>
     );
   }
   });
   
 //ChallengeComboLevel
-var RChallengeComboLevel = React.createClass({
+var rChallengeComboLevel = React.createClass({
   render: function() {
+   var cValue = "Combo level : ";
+    if(this.props.data !== undefined )
+        cValue  += this.props.data;
     return (
       <div className="ChallengeComboLevel">
-          Combo level
+          {cValue}
       </div>
     );
   }
   });
   
 //ChallengeScore
-var RChallengeScore = React.createClass({
+var rChallengeScore = React.createClass({
   render: function() {
-    return (
+  var cValue = "Score : ";
+    if(this.props.data !== undefined )
+        cValue  += this.props.data;
+     return (
       <div className="ChallengeScore">
-          Score
+          {cValue}
       </div>
     );
   }
@@ -140,18 +162,21 @@ var RChallengeScore = React.createClass({
 
 
 //ChallengeQuestion
-var RChallengeQuestion = React.createClass({
+var rChallengeQuestion = React.createClass({
   render: function() {
+    var cValue = "Question";
+    if(this.props.data !== undefined )
+        cValue  = this.props.data;
     return (
       <div className="ChallengeQuestion">
-        Question
+        {cValue}
       </div>
     );
   }
   });
 
 //ChallengeAnswer
-var RChallengeAnswer = React.createClass({
+var rChallengeAnswer = React.createClass({
   render: function() {
     return (
       <div className="ChallengeAnswer">
@@ -162,17 +187,20 @@ var RChallengeAnswer = React.createClass({
   });
 
 //ChallengeOldQuestion
-var RChallengeOldQuestion = React.createClass({
+var rChallengeOldQuestion = React.createClass({
   render: function() {
-    return (
+    var cValue = "Old question";
+    if(this.props.data !== undefined )
+        cValue  = this.props.data;
+     return (
       <div className="ChallengeOldQuestion">
-        Old question
+        {cValue}
       </div>
     );
   }
   });
 
 React.renderComponent(
-  <RChallengeContainer/>,
+  <rChallengeContainer data = {defaultData}/>,
   document.getElementById('content')
 );
