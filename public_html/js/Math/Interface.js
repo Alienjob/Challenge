@@ -2,7 +2,7 @@
 
 var defaultData = {
     name : "Упражнение",    //заголовок упражнения
-    state:0,                //статус - 0- нейтрально, 1- положиьельно, 2- отрицательно, 3 - заблокировано
+    state:0,                //статус - 0- нейтрально, 1- положительно, 2- отрицательно, 3 - заблокировано
     lastTime : -1,          //время последенго верного ответа. Если <0 то либо ответа не было либо он не верен
     level : 0,              //уровень набранного комбо. от 0 до 10
     score: 0,               //набранные очки
@@ -13,6 +13,7 @@ var defaultData = {
 
 //ChallengeContainer
 var rChallengeContainer = React.createClass({ 
+    
   render: function() {
     return (
       <div className="ChallengeContainer">
@@ -200,7 +201,3 @@ var rChallengeOldQuestion = React.createClass({
   }
   });
 
-React.renderComponent(
-  <rChallengeContainer data = {defaultData}/>,
-  document.getElementById('content')
-);
