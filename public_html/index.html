@@ -13,26 +13,17 @@ and open the template in the editor.
         <script src="js/libs/react/react-0.11.1.js" type="text/javascript"></script>
         <script src="js/libs/react/jquery-1.10.0.min.js" type="text/javascript"></script> 
         <script src="js/libs/react/showdown.min.js" type="text/javascript"></script> 
+
         <script src="js/Math/Model.js"  type="text/javascript"></script>
         <script src="js/Math/View.js"  type="text/jsx"></script>
-        
-        
-       <link rel="stylesheet" type="text/css" href="style/challenge.css" />
+        <script src="js/Math/Control.js"  type="text/jsx"></script>
+
+        <link rel="stylesheet" type="text/css" href="style/challenge.css" />
     </head>
     <body>
         <div id="content">Not work</div>
         <script type="text/jsx">
-            /** @jsx React.DOM */
-            var manager = new ChallengeManagerMath();
-            
-            renderChallenge = function(elementID, initData){
-                var challenge = manager.addChallenge(elementID, initData);
-                React.renderComponent(
-                    <rChallengeContainer data = {challenge}/>,
-                    document.getElementById(elementID)
-             );
-            }
-            renderChallenge("content", manager.InitData.minus789); 
+            renderChallenge("Вычитание 7,8,9", "content", manager.InitData.minus789); 
          </script>
     </body>
 </html>

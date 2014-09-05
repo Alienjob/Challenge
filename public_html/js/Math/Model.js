@@ -76,7 +76,7 @@ function ChallengeManager() {
     };
 
     this.saveResult = function(challenge){
-        setCookie(challenge.name, challenge.score, 20*60*60*1000);
+        sys.setCookie(challenge.name, challenge.score, 20*60*60*1000);
     };
     
 };
@@ -187,6 +187,7 @@ function ChallengeManagerMath() {
     
     this.addChallenge = function(name, initData){
         var challenge = new ChallengeMath(name, this, initData);
+        challenge.question = challenge.getOfflineQuestion();
         this.challenges[name] = challenge;
         return challenge;
     };
@@ -220,24 +221,20 @@ function Challenge(name, manager) {
     this.manager = manager;
     this.name = name;
 
-    this.state = this.states.neytral;
-    this.question;
-    this.lastTime;
-    this.delayLimit;
-    this.level;
-    this.score;
-
     this.verifyAnswer = function(currentAnswer){
         
         var currentTime = new Date();
         var delay = currentTime - this.lastTime;
         var bonus;
         
-        this.lastTime = currentTime;
         
-        var rightAnswer = this.question.calculate();
-                
+        var rightAnswer = this.question.calculate().toString();
+        
+        console.log(rightAnswer);
+        console.log(currentAnswer);
+        console.log(rightAnswer === currentAnswer);
         if (rightAnswer === currentAnswer){
+            this.lastTime = currentTime;
             this.state = this.states.win;
             if (delay < this.delayLimit)
                 this.level += 1;
@@ -247,6 +244,7 @@ function Challenge(name, manager) {
             this.score += bonus;
 
         }else{
+            this.lastTime = -1;
             this.state = this.states.lose;
             this.level = 0;
             bonus = 0;
@@ -259,15 +257,29 @@ function Challenge(name, manager) {
         
     };
     this.getOfflineQuestion = function(){
-        return new {text:"Введите А", calculate: function() {return "A";} };
+        function expression(){
+            this.toString = function(){ return "Введите А"};          
+            this.calculate = function(){ return "A"};          
+        }
+        return new expression();
     };
+
+    this.state = this.states.neytral;
+    this.question = this.getOfflineQuestion();
+    this.answer = "";
+    this.oldQuestion = "Здесь будет показан предыдущий вопрос";
+    this.lastTime = -1;
+    this.delayLimit = 30000;
+    this.level = 0;
+    this.score = 0;
+
     
 }
 
 function ChallengeMath(name, manager, initData){
     
     this.initData = initData;
-    ChallengeMath.superclass.constructor.call(this);
+    ChallengeMath.superclass.constructor.call(this, name, manager);
 
     //древовидная структура мат. выражения
     function expression(inFirstOperand, inSecondOperand, inOperator) {
@@ -284,12 +296,12 @@ function ChallengeMath(name, manager, initData){
             var o1 = 0;
             var o2 = 0;
             
-            if ( isNumber(this.firstOperand))
+            if ( sys.isNumber(this.firstOperand))
                 o1 = parseInt(this.firstOperand);
             else 
                 o1 = this.firstOperand.calculate();
             
-            if ( isNumber(this.secondOperand))
+            if ( sys.isNumber(this.secondOperand))
                 o2 = parseInt(this.secondOperand);
             else 
                 o2 = this.secondOperand.calculate();

@@ -1,4 +1,5 @@
 /** @jsx React.DOM */
+var states = {neytral : "neitral", win : "win", lose:"lose", blocked : "blocked"}
 
 var defaultData = {
     name : "Упражнение",    //заголовок упражнения
@@ -7,21 +8,46 @@ var defaultData = {
     level : 0,              //уровень набранного комбо. от 0 до 10
     score: 0,               //набранные очки
     question:"Вопрос",      //Строка вопроса
-    oldQuestion:"Прошлый вопрос" //Строка описывающая предыдущий вопрос
+    oldQuestion:"Прошлый вопрос", //Строка описывающая предыдущий вопрос
+    delayLimit: 30,          //время на ответ до сброса комбо
+    answer: ""              //текст ответа пользователя
+    
 };
-
 
 //ChallengeContainer
 var rChallengeContainer = React.createClass({ 
     
-  render: function() {
+    challenge : {},
+    
+    getInitialState: function() {
+        return {
+            cState  :   this.props.data
+        };
+    },
+    handleUserInput: function(answerText) {
+        this.challenge.answer = answerText;
+        this.setState({
+            cState: this.challenge
+        });
+    },
+    onUserKeyPress: function(intKey) {
+        if ( intKey === 13 ){
+            this.challenge.verifyAnswer(this.challenge.answer);
+            this.setState({
+                cState: this.challenge
+            });
+        }
+    },
+    render: function() {
+    this.challenge = this.props.data;
+    
     return (
       <div className="ChallengeContainer">
-        <rChallengeHeader data = {this.props.data.name}/>
-        <rChallengeScoreContainer data = {{lastTime : this.props.data.lastTime, level : this.props.data.level, score : this.props.data.score}}/>
-        <rChallengeQuestion data = {this.props.data.question}/>
-        <rChallengeAnswer/>
-        <rChallengeOldQuestion data = {this.props.data.oldQuestion}/>
+        <rChallengeHeader data = {this.state.cState.name}/>
+        <rChallengeScoreContainer data = {{lastTime : this.state.cState.lastTime, level : this.state.cState.level, score : this.state.cState.score}}/>
+        <rChallengeQuestion data = {this.state.cState.question.toString()}/>
+        <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
+        <rChallengeOldQuestion data = {this.state.cState.oldQuestion}/>
       </div>
     );
   }
@@ -178,13 +204,39 @@ var rChallengeQuestion = React.createClass({
 
 //ChallengeAnswer
 var rChallengeAnswer = React.createClass({
-  render: function() {
-    return (
-      <div className="ChallengeAnswer">
-        <input type="text"/>
-      </div>
-    );
-  }
+    handleChange: function() {
+        this.props.onUserInput(
+            this.refs.filterTextInput.getDOMNode().value            
+        );
+    },
+    getKeyCode: function(e) {
+        var intKey = (window.Event) ? e.which : e.keyCode;
+        this.props.onUserKeyPress(intKey);
+    },
+    componentDidMount: function() {
+        this
+            .getDOMNode()
+            .offsetParent
+            .addEventListener('keypress', this.getKeyCode);
+    },
+    
+    render: function() {
+        var cValue = "";
+        if(this.props.data !== undefined )
+            cValue  = this.props.data;
+        return (
+            <div className="ChallengeAnswer">
+                <input 
+                    type="text" 
+                    value = {cValue}
+
+                    ref="filterTextInput" 
+                    onChange = {this.handleChange}
+                    
+                />
+            </div>
+        );
+   }
   });
 
 //ChallengeOldQuestion
