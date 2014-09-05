@@ -3,6 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+var sys;
 
 //Объект группирует необходимые системные функции которые не следует включать в класс упражнений
 function sysObject(){
@@ -24,7 +25,7 @@ function sysObject(){
     /* устанавливает для куки с именем name значение value
     setCookie(Header, Score, 20*60*60*1000); // сохраняеn результат на 20 часов,  
      */
-    function setCookie(name, value, options) {
+    this.setCookie = function (name, value, options) {
       options = options || {};
 
       var expires = options.expires;
@@ -53,6 +54,15 @@ function sysObject(){
       document.cookie = updatedCookie;
     }
 
+    this.extend = function(Child, Parent) {
+
+        var F = function() { };
+        F.prototype = Parent.prototype;
+        Child.prototype = new F();
+        Child.prototype.constructor = Child;
+        Child.superclass = Parent.prototype;
+
+    };
 }
  
 function ChallengeManager() {
@@ -67,12 +77,15 @@ function ChallengeManager() {
 
     this.saveResult = function(challenge){
         setCookie(challenge.name, challenge.score, 20*60*60*1000);
-    }
+    };
     
 };
  
 
-function MathChallengeManager() {
+function ChallengeManagerMath() {
+    
+    ChallengeManagerMath.superclass.constructor.call(this);
+    
     function getInitData(typeLimit){
         var firstOperandLimit;
         var secondOperandLimit;
@@ -171,6 +184,12 @@ function MathChallengeManager() {
         }
         return ({firstOperandLimit : firstOperandLimit, secondOperandLimit:secondOperandLimit, operatorLimit:operatorLimit});
     }
+    
+    this.addChallenge = function(name, initData){
+        var challenge = new ChallengeMath(name, this, initData);
+        this.challenges[name] = challenge;
+        return challenge;
+    };
     this.InitData = {
     minus789 : getInitData('minus789'),
     multiply9 : getInitData('multiply9'),
@@ -189,12 +208,6 @@ function MathChallengeManager() {
     squareXX : getInitData('squareXX'),
     squareXXX : getInitData('squareXXX'),
     squareX5 : getInitData('squareX5')
-    }
-    
-    this.addChallenge = function(name, initData){
-        var challenge = new ChallengeMath(name, this, initData);
-        this.challenges[name] = challenge;
-        return challenge;
     };
     
 };
@@ -203,9 +216,6 @@ function MathChallengeManager() {
 function Challenge(name, manager) {
     
     this.states = {neytral : "neitral", win : "win", lose:"lose", blocked : "blocked"};
-    this.getOfflineQuestion = function(){
-        return new {text:"Введите А", call: function() {return "A"} };
-    }
     
     this.manager = manager;
     this.name = name;
@@ -225,7 +235,7 @@ function Challenge(name, manager) {
         
         this.lastTime = currentTime;
         
-        var rightAnswer = this.question.call();
+        var rightAnswer = this.question.calculate();
                 
         if (rightAnswer === currentAnswer){
             this.state = this.states.win;
@@ -248,10 +258,17 @@ function Challenge(name, manager) {
         manager.saveResult(this);
         
     };
+    this.getOfflineQuestion = function(){
+        return new {text:"Введите А", calculate: function() {return "A";} };
+    };
     
 }
 
-function ChallengeMath(name, manager){
+function ChallengeMath(name, manager, initData){
+    
+    this.initData = initData;
+    ChallengeMath.superclass.constructor.call(this);
+
     //древовидная структура мат. выражения
     function expression(inFirstOperand, inSecondOperand, inOperator) {
         this.firstOperand = inFirstOperand;
@@ -263,19 +280,19 @@ function ChallengeMath(name, manager){
           return this.firstOperand.toString() + ' ' + this.operator + ' ' + this.secondOperand.toString();
           
         };
-        this.call = function(){
+        this.calculate = function(){
             var o1 = 0;
             var o2 = 0;
             
             if ( isNumber(this.firstOperand))
                 o1 = parseInt(this.firstOperand);
             else 
-                o1 = this.firstOperand.call();
+                o1 = this.firstOperand.calculate();
             
             if ( isNumber(this.secondOperand))
                 o2 = parseInt(this.secondOperand);
             else 
-                o2 = this.secondOperand.call();
+                o2 = this.secondOperand.calculate();
             
             if (this.operator === '+')
                 return o1 + o2;
@@ -299,9 +316,9 @@ function ChallengeMath(name, manager){
         //Можно указать цифры, которые будут дописаны к операнду - SUFFIX
         //operationLimit ограничение на оператор. Строка допустимых операторов "+-*/^!"
         
-        var firstOperand = getRandomInt(firstOperandLimit.MIN, firstOperandLimit.MAX);
-        var secondOperand = getRandomInt(secondOperandLimit.MIN, secondOperandLimit.MAX);
-        var indexOperator = getRandomInt(1, 120)%operatorLimit.length;
+        var firstOperand = sys.getRandomInt(firstOperandLimit.MIN, firstOperandLimit.MAX);
+        var secondOperand = sys.getRandomInt(secondOperandLimit.MIN, secondOperandLimit.MAX);
+        var indexOperator = sys.getRandomInt(1, 120)%operatorLimit.length;
         var operator = operatorLimit[indexOperator];
         
         if (firstOperandLimit.DIVISIBLE !== undefined){
@@ -317,24 +334,28 @@ function ChallengeMath(name, manager){
         if (secondOperandLimit.SUFFIX !== undefined){
             secondOperand = +(secondOperand.toString() + secondOperandLimit.SUFFIX.toString());
         }
-
+        
         return new expression(firstOperand, secondOperand, operator);
         
     };
-    function getRandomQuestion (){
+    this.getOfflineQuestion = function(){
         
-        if (limit === undefined)
+        if (this.initData === undefined)
         {
             var firstOperandLimit = ({MIN : 1, MAX : getRandomInt(5, 1000)});
             var secondOperandLimit = ({MIN : 1, MAX : getRandomInt(5, 1000)});
             var operatorLimit = '+-*/';
             
-            limit = ({firstOperandLimit : firstOperandLimit, secondOperandLimit:secondOperandLimit, operatorLimit:operatorLimit});
+            this.initData = ({firstOperandLimit : firstOperandLimit, secondOperandLimit:secondOperandLimit, operatorLimit:operatorLimit});
         }
         
-        Question = getPrimitiveQuestion(limit.firstOperandLimit, limit.secondOperandLimit, limit.operatorLimit);
-        return Question;
+        return  getPrimitiveQuestion(this.initData.firstOperandLimit, this.initData.secondOperandLimit, this.initData.operatorLimit);
+        
 
     };
     
 }
+
+sys = new sysObject();
+sys.extend(ChallengeManagerMath, ChallengeManager);
+sys.extend(ChallengeMath, Challenge);
