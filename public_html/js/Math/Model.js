@@ -227,6 +227,7 @@ function Challenge(name, manager) {
         var bonus;
         
         var rightAnswer = this.question.calculate().toString();
+        this.oldQuestion = this.question.toString() + " = " + rightAnswer + ". Ваш ответ: " + currentAnswer;
         
         if (rightAnswer === currentAnswer){
             this.lastTime = currentTime;
