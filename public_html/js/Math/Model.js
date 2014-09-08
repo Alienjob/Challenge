@@ -77,11 +77,11 @@ function ChallengeManager() {
 
     this.saveResult = function(challenge){
         sys.setCookie(challenge.name, challenge.score, 20*60*60*1000);
+        challenge.question = challenge.getOfflineQuestion();
     };
     
 };
  
-
 function ChallengeManagerMath() {
     
     ChallengeManagerMath.superclass.constructor.call(this);
@@ -213,7 +213,6 @@ function ChallengeManagerMath() {
     
 };
 
-//протокласс
 function Challenge(name, manager) {
     
     this.states = {neytral : "neitral", win : "win", lose:"lose", blocked : "blocked"};
@@ -227,12 +226,8 @@ function Challenge(name, manager) {
         var delay = currentTime - this.lastTime;
         var bonus;
         
-        
         var rightAnswer = this.question.calculate().toString();
         
-        console.log(rightAnswer);
-        console.log(currentAnswer);
-        console.log(rightAnswer === currentAnswer);
         if (rightAnswer === currentAnswer){
             this.lastTime = currentTime;
             this.state = this.states.win;
@@ -254,6 +249,8 @@ function Challenge(name, manager) {
             this.state = this.states.blocked;
         
         manager.saveResult(this);
+        
+        this.answer = "";
         
     };
     this.getOfflineQuestion = function(){

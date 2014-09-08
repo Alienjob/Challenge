@@ -24,6 +24,9 @@
 .challengeRed .latest {}
 
 .ChallengeContainer {background:whitesmoke; padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+.ChallengeContainerWin {background:#F0FFF0; padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+.ChallengeContainerLose {background:#FFF5EE; padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
+.ChallengeContainerBlocked {background:whitesmoke; padding:15px; width:90%; max-width:500px; margin:10px auto; text-align:center;}
 .ChallengeHeader {text-align:left;}
 .ChallengeButtonsGroup {float:right;}
 .ChallengeScoreContainer {}

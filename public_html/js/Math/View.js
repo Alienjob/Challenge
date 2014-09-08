@@ -14,6 +14,16 @@ var defaultData = {
     
 };
 
+
+var panel = ReactBootstrap.Panel;
+var ProgressBar = ReactBootstrap.ProgressBar;
+var Button = ReactBootstrap.Button;
+var Glyphicon = ReactBootstrap.Glyphicon;
+var ButtonGroup = ReactBootstrap.ButtonGroup;
+var ButtonToolbar = ReactBootstrap.ButtonToolbar;
+var Input = ReactBootstrap.Input;
+var Well  = ReactBootstrap.Well;
+
 //ChallengeContainer
 var rChallengeContainer = React.createClass({ 
     
@@ -36,19 +46,27 @@ var rChallengeContainer = React.createClass({
             this.setState({
                 cState: this.challenge
             });
+            this.refs.scoreContainer.refs.comboContainer.initState(this.challenge.lastTime);
         }
     },
     render: function() {
     this.challenge = this.props.data;
+    var className = "ChallengeContainer";
+    if (this.state.cState.state === this.challenge.states.win)
+        className = "ChallengeContainerWin";
+    if (this.state.cState.state === this.challenge.states.lose)
+        className = "ChallengeContainerLose";
+    if (this.state.cState.state === this.challenge.states.blocked)
+        className = "ChallengeContainerBlocked";
     
     return (
-      <div className="ChallengeContainer">
-        <rChallengeHeader data = {this.state.cState.name}/>
-        <rChallengeScoreContainer data = {{lastTime : this.state.cState.lastTime, level : this.state.cState.level, score : this.state.cState.score}}/>
-        <rChallengeQuestion data = {this.state.cState.question.toString()}/>
-        <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
-        <rChallengeOldQuestion data = {this.state.cState.oldQuestion}/>
-      </div>
+        <panel className={className}>
+          <rChallengeHeader data = {this.state.cState.name}/>
+          <rChallengeScoreContainer ref = 'scoreContainer' data = {{lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score}}/>
+          <rChallengeQuestion data = {this.state.cState.question.toString()}/>
+          <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
+          <rChallengeOldQuestion data = {this.state.cState.oldQuestion}/>
+        </panel>
     );
   }
   });
@@ -57,14 +75,18 @@ var rChallengeContainer = React.createClass({
 var rChallengeHeader = React.createClass({
   render: function() {
     return (
-      <div className="ChallengeHeader">
-        <rChallengeName data = {this.props.data}/>
+      <Well bsSize="small" className="ChallengeHeader">
+      <ButtonToolbar>
+      <rChallengeName data = {this.props.data}/>
         <div  className="ChallengeButtonsGroup">
+          <ButtonGroup  className="ChallengeButtonsGroup">
             <rChallengeSocial/>
             <rChallengeStat/>
             <rChallengeHelp/>
+        </ButtonGroup>
         </div>
-      </div>
+      </ButtonToolbar>
+      </Well>
     );
   }
   });
@@ -73,9 +95,9 @@ var rChallengeHeader = React.createClass({
 var rChallengeScoreContainer = React.createClass({
   render: function() {
     return (
-      <div className="ChallengeScoreContainer">
-        <rChallengeComboContainer   data = {{lastTime : this.props.data.lastTime, level : this.props.data.level}} />
-        <rChallengeScore            data = {this.props.data.score}/>
+      <div  className="ChallengeScoreContainer">     
+        <rChallengeComboContainer  ref = 'comboContainer' data = {{lastTime : this.props.data.lastTime, delayLimit : this.props.data.delayLimit, level : this.props.data.level}} /> 
+        <rChallengeScore data = {this.props.data.score}/>
       </div>
     );
   }
@@ -83,17 +105,46 @@ var rChallengeScoreContainer = React.createClass({
 
 //ChallengeComboContainer
 var rChallengeComboContainer = React.createClass({
+  getInitialState: function() {
+    return {slevel: 0, stime:100, sLastTime : -1};
+  },
+  initState : function(lastTime){
+      var stime = 0;
+      var slevel = 0;
+      if (lastTime !==  this.state.sLastTime){
+          if(lastTime === -1){
+            clearInterval(this.interval);
+            }
+          else{
+            stime = 100;
+            slevel = this.props.data.level; 
+            clearInterval(this.interval);
+            this.interval = setInterval(this.tick, 1000)
+            } 
+        this.setState({slevel: slevel, stime : stime, sLastTime : lastTime});
+      }
+  },
+  tick: function() {
+    var stime = this.state.stime;
+    var slevel = this.state.slevel;
+    if (stime > 0) {
+        stime -= 1000 * 100/this.props.data.delayLimit;
+    }else{
+        stime  = 0;
+        slevel = 0;
+        clearInterval(this.interval);
+    }
+    this.setState({stime: stime, slevel : slevel, sLastTime : this.state.sLastTime});
+  },
   render: function() {
     return (
       <div className="ChallengeComboContainer">
-        <rChallengeComboTime data = {this.props.data.lastTime}/>
-        <rChallengeComboLevel data = {this.props.data.level}/>
+        <rChallengeComboTime data = {this.state.stime}/>
+        <rChallengeComboLevel data = {this.state.slevel}/>
       </div>
     );
   }
   });
-
-
 
 // ChallengeName
 var rChallengeName = React.createClass({
@@ -114,7 +165,7 @@ var rChallengeSocial = React.createClass({
   render: function() {
     return (
       <div className="ChallengeSocial">
-          Social
+          <Button bsSize="xsmall"><Glyphicon glyph="comment" /></Button>
       </div>
     );
   }
@@ -125,7 +176,7 @@ var rChallengeStat = React.createClass({
   render: function() {
     return (
       <div className="ChallengeStat">
-          Stat
+          <Button bsSize="xsmall"><Glyphicon glyph="signal" /></Button>
       </div>
     );
   }
@@ -136,7 +187,7 @@ var rChallengeHelp = React.createClass({
   render: function() {
     return (
       <div className="ChallengeHelp">
-          Help
+          <Button bsSize="xsmall">?</Button>
       </div>
     );
   }
@@ -147,12 +198,15 @@ var rChallengeHelp = React.createClass({
 //ChallengeComboTime
 var rChallengeComboTime = React.createClass({
   render: function() {
-   var cValue = "Combo time : ";
+   var cValue = 0;
     if(this.props.data !== undefined )
-        cValue  += this.props.data;
+    {
+        cValue =   this.props.data;
+    }
+
      return (
       <div className="ChallengeComboTime">
-          {cValue}
+        <ProgressBar bsStyle="info" now={cValue} />
       </div>
     );
   }
@@ -161,12 +215,12 @@ var rChallengeComboTime = React.createClass({
 //ChallengeComboLevel
 var rChallengeComboLevel = React.createClass({
   render: function() {
-   var cValue = "Combo level : ";
+   var cValue = 0;
     if(this.props.data !== undefined )
-        cValue  += this.props.data;
+        cValue  = this.props.data;
     return (
       <div className="ChallengeComboLevel">
-          {cValue}
+        <ProgressBar bsStyle="success" now={10*cValue} />
       </div>
     );
   }
