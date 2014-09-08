@@ -58,7 +58,6 @@ var rChallengeContainer = React.createClass({
         className = "ChallengeContainerLose";
     if (this.state.cState.state === this.challenge.states.blocked)
         className = "ChallengeContainerBlocked";
-    
     return (
         <panel className={className}>
           <rChallengeHeader data = {this.state.cState.name}/>
@@ -250,7 +249,7 @@ var rChallengeQuestion = React.createClass({
         cValue  = this.props.data;
     return (
       <div className="ChallengeQuestion">
-        {cValue}
+        <h3>{cValue}</h3>
       </div>
     );
   }
