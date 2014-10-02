@@ -23,6 +23,9 @@ var ButtonGroup = ReactBootstrap.ButtonGroup;
 var ButtonToolbar = ReactBootstrap.ButtonToolbar;
 var Input = ReactBootstrap.Input;
 var Well  = ReactBootstrap.Well;
+var OverlayTrigger  = ReactBootstrap.OverlayTrigger;
+var Modal  = ReactBootstrap.Modal;
+var ModalTrigger  = ReactBootstrap.ModalTrigger;
 
 //ChallengeContainer
 var rChallengeContainer = React.createClass({ 
@@ -60,7 +63,7 @@ var rChallengeContainer = React.createClass({
         className = "ChallengeContainerBlocked";
     return (
         <panel className={className}>
-          <rChallengeHeader data = {{name : this.state.cState.name, loged : this.state.cState.manager.userdata.loged}}/>
+          <rChallengeHeader data = {{name : this.state.cState.name, loged : challengeManager.userdata.loged}}/>
           <rChallengeScoreContainer ref = 'scoreContainer' data = {{lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score}}/>
           <rChallengeQuestion data = {this.state.cState.question.toString()}/>
           <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
@@ -79,7 +82,7 @@ var rChallengeHeader = React.createClass({
       <rChallengeName data = {this.props.data.name}/>
         <div  className="ChallengeButtonsGroup">
           <ButtonGroup  className="ChallengeButtonsGroup">
-            <rChallengeLogin data = {this.props.data.loged}/>
+            <rChallengeLogin data = {this.props.data.loged} />
             <rChallengeSocial data = {this.props.data.loged}/>
             <rChallengeStat data = {this.props.data.loged}/>
             <rChallengeHelp/>
@@ -159,8 +162,20 @@ var rChallengeName = React.createClass({
     );
   }
   });
-  
+
 //ChallengeLogin
+var rLogin = React.createClass({
+  render: function() {
+    return this.transferPropsTo(
+        <Modal title="Выберите способ входа:">
+          <div className="modal-body">
+            <p><div id="uLogin" data-ulogin="display=panel;fields=first_name,last_name;providers=vkontakte,odnoklassniki,mailru,facebook;hidden=other;redirect_uri=''; callback=callbackUlogin"></div></p>
+          </div>
+        </Modal>
+      );
+  }
+});  
+
 var rChallengeLogin = React.createClass({
   render: function() {
       console.log(this.props.data);
@@ -172,7 +187,9 @@ var rChallengeLogin = React.createClass({
     else
         return (
           <div className="ChallengeLogin">
-              <Button bsSize="xsmall"><Glyphicon glyph="user" /></Button>
+             <ModalTrigger modal={<rLogin />}> 
+                <Button bsStyle="default" bsSize="xsmall"><Glyphicon glyph="user" /></Button>
+             </ModalTrigger>
           </div>
         );
   }
@@ -181,7 +198,6 @@ var rChallengeLogin = React.createClass({
 //ChallengeSocial
 var rChallengeSocial = React.createClass({
   render: function() {
-      console.log(this.props.data);
     if (this.props.data === false)
         return (
             <div className="ChallengeSocial" >
@@ -199,7 +215,6 @@ var rChallengeSocial = React.createClass({
 //ChallengeStat
 var rChallengeStat = React.createClass({
   render: function() {
-      console.log(this.props.data);
     if (this.props.data === false)
         return (
           <div className="ChallengeStat" >

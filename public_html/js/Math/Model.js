@@ -44,32 +44,39 @@ function ChallengeManager() {
     }
     
     function beginMessage(message){
+        console.log(message);
         var pmessage = JSON.parse(message);
         if (pmessage.login !== undefined){
-            this.userdata = pmessage.userdata;
-            this.userdata.loged = true;
+            console.log('LOGIN');
+            challengeManager.userdata = pmessage.userdata;
+            challengeManager.userdata.loged = true;
             if (pmessage.challenges !== undefined)
-                this.challenges = pmessage.challenges;
+                challengeManager.challenges = pmessage.challenges;
         }
         if (pmessage.challenge !== undefined){
             var id = pmessage.challenge;
             if (pmessage.result !== undefined)
             {
-                challenges[id].answerVerifed(pmessage.result);
+                challengeManager.challenges[id].answerVerifed(pmessage.result);
             }
             if (pmessage.question !== undefined)
             {
-                challenges[id].question = pmessage.question;
+                challengeManager.challenges[id].question = pmessage.question;
             }
             if (pmessage.stat !== undefined)
             {
-                challenges[id].stat = pmessage.stat;
+                challengeManager.challenges[id].stat = pmessage.stat;
                 console.log(id.toString() + ' stat ' + JSON.stringify(pmessage.stat));
             }
         }
         if (pmessage.log !== undefined)
         {
-            console.log(id.toString() + pmessage.log);
+            if (pmessage.challenge !== undefined)
+                console.log(pmessage.challenge.toString() + pmessage.log);
+            else
+                console.log(pmessage.log);
+            
+
         }
     
     }
@@ -80,14 +87,14 @@ function ChallengeManager() {
     
     this.addChallenge = function(name){
         var id = Math.random();
-        var challenge = new Challenge(name, this, id);
+        var challenge = new Challenge(name, id);
         
-        this.challenges[id] = challenge;
+        challengeManager.challenges[id] = challenge;
         return challenge;
     };
     this.ulogin = function(token){
         var outgoingMessage = {
-            token : this.message.value,
+            token : token,
             challenges : this.challenges
         };
         wsSend(outgoingMessage)
@@ -95,16 +102,17 @@ function ChallengeManager() {
 
     this.saveResult = function(challenge){
 
-        if (this.userdata.loged === true){
+        if (challengeManager.userdata.loged === true){
             
-            challenge.state = challenge.waitVerifyAnswer();
+            challenge.waitVerifyAnswer();
             var message = {stat : {
+                    delay       : challenge.delay,
+                    point       : challenge.bonus,
+                    question    : challenge.question,
+                    answer      : challenge.answer
+                },
                 challengeID : challenge.id,
-                delay       : challenge.delay,
-                point       : challenge.bonus,
-                question    : challenge.question,
-                answer      : challenge.answer
-                }};
+                };
             wsSend(message);
         
         }else{
@@ -242,7 +250,7 @@ function ChallengeManagerMath() {
     
     this.addChallenge = function(name, initData){
         var id = Math.random();
-        var challenge = new ChallengeMath(name, this, id, initData);
+        var challenge = new ChallengeMath(name, id, initData);
         challenge.question = challenge.getOfflineQuestion();
         this.challenges[id] = challenge;
         return challenge;
@@ -269,21 +277,17 @@ function ChallengeManagerMath() {
     
 };
 
-function Challenge(name, manager, id) {
+function Challenge(name, id) {
     
     this.states = {neytral : "neitral", win : "win", lose:"lose", blocked : "blocked"};
     
     this.id = id;
     this.baseID = 0;
-    this.manager = manager;
     this.name = name;
 
-    this.login = function(token){
-        this.manager.ulogin(token);
-    }
     this.verifyAnswer = function(currentAnswer){
         
-        this.manager.saveResult(this);
+        challengeManager.saveResult(this);
         
     };
     this.offlineVerifyAnswer = function(currentAnswer){
@@ -320,6 +324,7 @@ function Challenge(name, manager, id) {
     this.waitVerifyAnswer = function(){
         
         this.state = this.states.blocked;
+        this.answer = "";
         
     };
     this.answerVerifed = function(result){
@@ -365,11 +370,11 @@ function Challenge(name, manager, id) {
     
 }
 
-function ChallengeMath(name, manager, id, initData){
+function ChallengeMath(name, id, initData){
     
     this.initData = initData;
     
-    ChallengeMath.superclass.constructor.call(this, name, manager, id);
+    ChallengeMath.superclass.constructor.call(this, name, id);
 
     this.baseID = initData.baseID;
 

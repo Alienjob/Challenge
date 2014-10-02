@@ -1,10 +1,14 @@
 /** @jsx React.DOM */
-var manager = new ChallengeManagerMath();
+var challengeManager = new ChallengeManagerMath();
 
 renderChallenge = function(name, elementID, initData){
-    var challenge = manager.addChallenge(name, initData);
+    var challenge = challengeManager.addChallenge(name, initData);
     React.renderComponent(
         <rChallengeContainer data = {challenge}/>,
         document.getElementById(elementID)
  );
 }
+  function callbackUlogin(token){
+            challengeManager.ulogin(token);
+        }
+      

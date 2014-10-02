@@ -19,6 +19,8 @@ and open the template in the editor.
         <script src="js/Math/Model.js"  type="text/javascript"></script>
         <script src="js/Math/View.js"  type="text/jsx"></script>
         <script src="js/Math/Control.js"  type="text/jsx"></script>
+        
+        <script src="//ulogin.ru/js/ulogin.js"></script>
 
         <link rel="stylesheet" type="text/css" href="style/challenge.css" />
         <link rel="stylesheet" type="text/css" href="style/bootstrap.css" />
@@ -28,10 +30,9 @@ and open the template in the editor.
     <body>
         <div id="content">Для работы упражнений необходим javascript</div>
         <script type="text/jsx">
-            renderChallenge("Вычитание 7,8,9", "content", manager.InitData.minus789); 
+            renderChallenge("Вычитание 7,8,9", "content", challengeManager.InitData.minus789); 
         </script>
     </body>
     
-    <div id="subscribe"></div>
     
 </html>
