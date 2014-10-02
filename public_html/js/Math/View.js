@@ -60,7 +60,7 @@ var rChallengeContainer = React.createClass({
         className = "ChallengeContainerBlocked";
     return (
         <panel className={className}>
-          <rChallengeHeader data = {this.state.cState.name}/>
+          <rChallengeHeader data = {{name : this.state.cState.name, loged : this.state.cState.manager.userdata.loged}}/>
           <rChallengeScoreContainer ref = 'scoreContainer' data = {{lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score}}/>
           <rChallengeQuestion data = {this.state.cState.question.toString()}/>
           <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
@@ -76,11 +76,12 @@ var rChallengeHeader = React.createClass({
     return (
       <Well bsSize="small" className="ChallengeHeader">
       <ButtonToolbar>
-      <rChallengeName data = {this.props.data}/>
+      <rChallengeName data = {this.props.data.name}/>
         <div  className="ChallengeButtonsGroup">
           <ButtonGroup  className="ChallengeButtonsGroup">
-            <rChallengeSocial/>
-            <rChallengeStat/>
+            <rChallengeLogin data = {this.props.data.loged}/>
+            <rChallengeSocial data = {this.props.data.loged}/>
+            <rChallengeStat data = {this.props.data.loged}/>
             <rChallengeHelp/>
         </ButtonGroup>
         </div>
@@ -159,25 +160,57 @@ var rChallengeName = React.createClass({
   }
   });
   
+//ChallengeLogin
+var rChallengeLogin = React.createClass({
+  render: function() {
+      console.log(this.props.data);
+    if (this.props.data === true)
+        return (
+          <div className="ChallengeLogin">
+          </div>
+            );
+    else
+        return (
+          <div className="ChallengeLogin">
+              <Button bsSize="xsmall"><Glyphicon glyph="user" /></Button>
+          </div>
+        );
+  }
+  });
+  
 //ChallengeSocial
 var rChallengeSocial = React.createClass({
   render: function() {
-    return (
-      <div className="ChallengeSocial">
-          <Button bsSize="xsmall"><Glyphicon glyph="comment" /></Button>
-      </div>
-    );
+      console.log(this.props.data);
+    if (this.props.data === false)
+        return (
+            <div className="ChallengeSocial" >
+            </div>
+              );
+    else
+        return (
+            <div className="ChallengeSocial" >
+              <Button bsSize="xsmall"><Glyphicon glyph="comment" /></Button>
+          </div>
+        );
   }
   });
 
 //ChallengeStat
 var rChallengeStat = React.createClass({
   render: function() {
-    return (
-      <div className="ChallengeStat">
-          <Button bsSize="xsmall"><Glyphicon glyph="signal" /></Button>
-      </div>
-    );
+      console.log(this.props.data);
+    if (this.props.data === false)
+        return (
+          <div className="ChallengeStat" >
+          </div>
+            );
+    else
+        return (
+          <div className="ChallengeStat" >
+              <Button bsSize="xsmall"><Glyphicon glyph="signal" /></Button>
+          </div>
+        );
   }
   });
 

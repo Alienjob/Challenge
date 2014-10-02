@@ -14,46 +14,6 @@ function sysObject(){
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
     
-    // возвращает cookie с именем name, если есть, если нет, то undefined
-    this.getCookie = function(name) {
-      var matches = document.cookie.match(new RegExp(
-        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-      ));
-      return matches ? decodeURIComponent(matches[1]) : undefined;
-    };
-    
-    /* устанавливает для куки с именем name значение value
-    setCookie(Header, Score, 20*60*60*1000); // сохраняеn результат на 20 часов,  
-     */
-    this.setCookie = function (name, value, options) {
-      options = options || {};
-
-      var expires = options.expires;
-
-      if (typeof expires == "number" && expires) {
-        var d = new Date();
-        d.setTime(d.getTime() + expires*1000);
-        expires = options.expires = d;
-      }
-      if (expires && expires.toUTCString) { 
-            options.expires = expires.toUTCString();
-      }
-
-      value = encodeURIComponent(value);
-
-      var updatedCookie = name + "=" + value;
-
-      for(var propName in options) {
-        updatedCookie += "; " + propName;
-        var propValue = options[propName];    
-        if (propValue !== true) { 
-          updatedCookie += "=" + propValue;
-         }
-      }
-
-      document.cookie = updatedCookie;
-    }
-
     this.extend = function(Child, Parent) {
 
         var F = function() { };
@@ -68,21 +28,98 @@ function sysObject(){
 function ChallengeManager() {
     
     this.challenges = [];
+    this.userdata = {loged : false};
+    
+    function wsConnect(){
+        /*if (!window.WebSocket) {
+                document.body.innerHTML = 'WebSocket в этом браузере не поддерживается.';
+        }*/
+
+        // создать подключение
+        this.socket = new WebSocket("ws://localhost:8081");
+        this.socket.onmessage = function(event) {
+            var incomingMessage = event.data;
+            beginMessage(incomingMessage); 
+        };
+    }
+    
+    function beginMessage(message){
+        var pmessage = JSON.parse(message);
+        if (pmessage.login !== undefined){
+            this.userdata = pmessage.userdata;
+            this.userdata.loged = true;
+            if (pmessage.challenges !== undefined)
+                this.challenges = pmessage.challenges;
+        }
+        if (pmessage.challenge !== undefined){
+            var id = pmessage.challenge;
+            if (pmessage.result !== undefined)
+            {
+                challenges[id].answerVerifed(pmessage.result);
+            }
+            if (pmessage.question !== undefined)
+            {
+                challenges[id].question = pmessage.question;
+            }
+            if (pmessage.stat !== undefined)
+            {
+                challenges[id].stat = pmessage.stat;
+                console.log(id.toString() + ' stat ' + JSON.stringify(pmessage.stat));
+            }
+        }
+        if (pmessage.log !== undefined)
+        {
+            console.log(id.toString() + pmessage.log);
+        }
+    
+    }
+    
+    function wsSend(message){
+        this.socket.send(JSON.stringify(message));
+    }
     
     this.addChallenge = function(name){
-        var challenge = new Challenge(name, this);
-        this.challenges[name] = challenge;
+        var id = Math.random();
+        var challenge = new Challenge(name, this, id);
+        
+        this.challenges[id] = challenge;
         return challenge;
     };
+    this.ulogin = function(token){
+        var outgoingMessage = {
+            token : this.message.value,
+            challenges : this.challenges
+        };
+        wsSend(outgoingMessage)
+    }
 
     this.saveResult = function(challenge){
-        sys.setCookie(challenge.name, challenge.score, 20*60*60*1000);
-        challenge.question = challenge.getOfflineQuestion();
+
+        if (this.userdata.loged === true){
+            
+            challenge.state = challenge.waitVerifyAnswer();
+            var message = {stat : {
+                challengeID : challenge.id,
+                delay       : challenge.delay,
+                point       : challenge.bonus,
+                question    : challenge.question,
+                answer      : challenge.answer
+                }};
+            wsSend(message);
+        
+        }else{
+            challenge.offlineVerifyAnswer(challenge.answer);
+            challenge.question = challenge.getOfflineQuestion();
+        }
+
     };
+    
+    wsConnect();
     
 };
  
 function ChallengeManagerMath() {
+    
     
     ChallengeManagerMath.superclass.constructor.call(this);
     
@@ -90,105 +127,124 @@ function ChallengeManagerMath() {
         var firstOperandLimit;
         var secondOperandLimit;
         var operatorLimit;
+        var baseID;
         
         if (typeLimit === 'minus789')        {
+            baseID = 1;
             firstOperandLimit = ({MIN : 100, MAX : 1000});
             secondOperandLimit = ({MIN : 7, MAX : 9});
             operatorLimit = '-';
         }
         if (typeLimit === 'multiply9')        {
+            baseID = 2;
             firstOperandLimit = ({MIN : 10, MAX : 100});
             secondOperandLimit = ({MIN : 9, MAX : 9});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiply2')        {
+            baseID = 3;
             firstOperandLimit = ({MIN : 100, MAX : 10000});
             secondOperandLimit = ({MIN : 2, MAX : 2});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiply4')        {
+            baseID = 4;
             firstOperandLimit = ({MIN : 100, MAX : 5000});
             secondOperandLimit = ({MIN : 4, MAX : 4});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiply8')        {
+            baseID = 5;
             firstOperandLimit = ({MIN : 100, MAX : 1000});
             secondOperandLimit = ({MIN : 8, MAX : 8});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiply5')        {
+            baseID = 6;
             firstOperandLimit = ({MIN : 100, MAX : 1000, DIVISIBLE : 2});
             secondOperandLimit = ({MIN : 5, MAX : 5});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiply25')        {
+            baseID = 7;
             firstOperandLimit = ({MIN : 100, MAX : 1000, DIVISIBLE : 4});
             secondOperandLimit = ({MIN : 25, MAX : 25});
             operatorLimit = '*';
         }
         if (typeLimit === 'division2')        {
-            var firstOperandLimit = ({MIN : 1, MAX : 10000, DIVISIBLE : 2});
-            var secondOperandLimit = ({MIN : 2, MAX : 2});
-            var operatorLimit = '/';
-            
+            baseID = 8;
+            firstOperandLimit = ({MIN : 1, MAX : 10000, DIVISIBLE : 2});
+            secondOperandLimit = ({MIN : 2, MAX : 2});
+            operatorLimit = '/';
         }
         if (typeLimit === 'division4')        {
+            baseID = 9;
             firstOperandLimit = ({MIN : 100, MAX : 5000, DIVISIBLE : 4});
             secondOperandLimit = ({MIN : 4, MAX : 4});
             operatorLimit = '/';
         }
         if (typeLimit === 'division8')        {
+            baseID = 10;
             firstOperandLimit = ({MIN : 100, MAX : 1000, DIVISIBLE : 8});
             secondOperandLimit = ({MIN : 8, MAX : 8});
             operatorLimit = '/';
         }
         if (typeLimit === 'multiply19')        {
+            baseID = 11;
             firstOperandLimit = ({MIN : 100, MAX : 1000});
             secondOperandLimit = ({MIN : 1, MAX : 9});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiplyXX')        {
+            baseID = 12;
             firstOperandLimit = ({MIN : 20, MAX : 100});
             secondOperandLimit = ({MIN : 20, MAX : 100});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiply11')        {
+            baseID = 13;
             firstOperandLimit = ({MIN : 20, MAX : 100});
             secondOperandLimit = ({MIN : 11, MAX : 11});
             operatorLimit = '*';
         }
         if (typeLimit === 'multiplyXXX11')        {
+            baseID = 14;
             firstOperandLimit = ({MIN : 200, MAX : 1000});
             secondOperandLimit = ({MIN : 11, MAX : 11});
             operatorLimit = '*';
         }
         if (typeLimit === 'squareX')        {
+            baseID = 15;
             firstOperandLimit = ({MIN : 2, MAX : 9});
             secondOperandLimit = ({MIN : 2, MAX : 2});
             operatorLimit = '^';
         }
         if (typeLimit === 'squareXX')        {
+            baseID = 16;
             firstOperandLimit = ({MIN : 10, MAX : 99});
             secondOperandLimit = ({MIN : 2, MAX : 2});
             operatorLimit = '^';
         }
         if (typeLimit === 'squareXXX')        {
+            baseID = 17;
             firstOperandLimit = ({MIN : 100, MAX : 999});
             secondOperandLimit = ({MIN : 2, MAX : 2});
             operatorLimit = '^';
         }
         if (typeLimit === 'squareX5')        {
+            baseID = 18;
             firstOperandLimit = ({MIN : 1, MAX : 9, SUFFIX : 5});
             secondOperandLimit = ({MIN : 2, MAX : 2});
             operatorLimit = '^';
         }
-        return ({firstOperandLimit : firstOperandLimit, secondOperandLimit:secondOperandLimit, operatorLimit:operatorLimit});
+        return ({firstOperandLimit : firstOperandLimit, secondOperandLimit:secondOperandLimit, operatorLimit:operatorLimit, baseID : baseID});
     }
     
     this.addChallenge = function(name, initData){
-        var challenge = new ChallengeMath(name, this, initData);
+        var id = Math.random();
+        var challenge = new ChallengeMath(name, this, id, initData);
         challenge.question = challenge.getOfflineQuestion();
-        this.challenges[name] = challenge;
+        this.challenges[id] = challenge;
         return challenge;
     };
     this.InitData = {
@@ -213,18 +269,27 @@ function ChallengeManagerMath() {
     
 };
 
-function Challenge(name, manager) {
+function Challenge(name, manager, id) {
     
     this.states = {neytral : "neitral", win : "win", lose:"lose", blocked : "blocked"};
     
+    this.id = id;
+    this.baseID = 0;
     this.manager = manager;
     this.name = name;
 
+    this.login = function(token){
+        this.manager.ulogin(token);
+    }
     this.verifyAnswer = function(currentAnswer){
         
+        this.manager.saveResult(this);
+        
+    };
+    this.offlineVerifyAnswer = function(currentAnswer){
+        
         var currentTime = new Date();
-        var delay = currentTime - this.lastTime;
-        var bonus;
+        this.delay = currentTime - this.lastTime;
         
         var rightAnswer = this.question.calculate().toString();
         this.oldQuestion = this.question.toString() + " = " + rightAnswer + ". Ваш ответ: " + currentAnswer;
@@ -232,26 +297,49 @@ function Challenge(name, manager) {
         if (rightAnswer === currentAnswer){
             this.lastTime = currentTime;
             this.state = this.states.win;
-            if (delay < this.delayLimit)
+            if (this.delay < this.delayLimit)
                 this.level += 1;
             else
                 this.level = 0;
-            bonus = 1 + this.level * 2; 
-            this.score += bonus;
+            this.bonus = 1 + this.level * 2; 
+            this.score += this.bonus;
 
         }else{
             this.lastTime = -1;
             this.state = this.states.lose;
             this.level = 0;
-            bonus = 0;
+            this.bonus = 0;
         }
 
         if (this.score >= 100)
             this.state = this.states.blocked;
         
-        manager.saveResult(this);
-        
         this.answer = "";
+        
+    };
+    this.waitVerifyAnswer = function(){
+        
+        this.state = this.states.blocked;
+        
+    };
+    this.answerVerifed = function(result){
+        
+        if (result.right){
+            this.state = this.states.win;
+            if (result.combo)
+                this.level += 1;
+            else
+                this.level = 0;
+            this.bonus = result.bonus; 
+            this.score = result.score;
+        }else{
+            this.state = this.states.lose;
+            this.level = 0;
+            this.bonus = 0; 
+        }
+        if (result.blocked){
+            this.state = this.states.blocked;
+        }
         
     };
     this.getOfflineQuestion = function(){
@@ -270,14 +358,20 @@ function Challenge(name, manager) {
     this.delayLimit = 30000;
     this.level = 0;
     this.score = 0;
-
+    this.bonus = 0; 
+    this.delay = 1000000;
+    
+    this.stat = [];
     
 }
 
-function ChallengeMath(name, manager, initData){
+function ChallengeMath(name, manager, id, initData){
     
     this.initData = initData;
-    ChallengeMath.superclass.constructor.call(this, name, manager);
+    
+    ChallengeMath.superclass.constructor.call(this, name, manager, id);
+
+    this.baseID = initData.baseID;
 
     //древовидная структура мат. выражения
     function expression(inFirstOperand, inSecondOperand, inOperator) {
