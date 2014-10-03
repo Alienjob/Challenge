@@ -178,7 +178,6 @@ var rLogin = React.createClass({
 
 var rChallengeLogin = React.createClass({
   render: function() {
-      console.log(this.props.data);
     if (this.props.data === true)
         return (
           <div className="ChallengeLogin">
