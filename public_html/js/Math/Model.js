@@ -49,26 +49,32 @@ function ChallengeManager() {
         var pmessage = JSON.parse(message);
         if (pmessage.login !== undefined){
             console.log('LOGIN');
-            this.userdata = pmessage.userdata;
-            this.userdata.loged = true;
+            challengeManager.userdata = pmessage.userdata;
+            challengeManager.userdata.loged = true;
             if (pmessage.challenges !== undefined)
-                this.challenges = pmessage.challenges;
-            console.log(JSON.stringify(this.userdata));
+                for(var i in pmessage.challenges) {
+                    if (!pmessage.challenges.hasOwnProperty(i)) continue;
+                    if (challengeManager.challenges[i]){
+                        challengeManager.challenges[i].answerVerifed(pmessage.challenges[i].result);
+                        challengeManager.challenges[i].initQuestion(pmessage.challenges[i].question); 
+                    }
+            }
+            console.log(JSON.stringify(challengeManager.userdata));
 
         }
         if (pmessage.challenge !== undefined){
             var id = pmessage.challenge;
             if (pmessage.result !== undefined)
             {
-                this.challenges[id].answerVerifed(pmessage.result);
+                challengeManager.challenges[id].answerVerifed(pmessage.result);
             }
             if (pmessage.question !== undefined)
             {
-                this.challenges[id].question = pmessage.question;
+                challengeManager.challenges[id].initQuestion(pmessage.question);
             }
             if (pmessage.stat !== undefined)
             {
-                this.challenges[id].stat = pmessage.stat;
+                challengeManager.challenges[id].stat = pmessage.stat;
                 console.log(id.toString() + ' stat ' + JSON.stringify(pmessage.stat));
             }
         }
@@ -78,8 +84,6 @@ function ChallengeManager() {
                 console.log(pmessage.challenge.toString() + pmessage.log);
             else
                 console.log(pmessage.log);
-            
-
         }
     
     }
@@ -90,16 +94,16 @@ function ChallengeManager() {
     
     this.addChallenge = function(name){
         var id = Math.random();
-        var challenge = new Challenge(name, this, id);
+        var challenge = new Challenge(name, challengeManager, id);
         
-        this.challenges[id] = challenge;
+        challengeManager.challenges[id] = challenge;
         return challenge;
     };
     this.ulogin = function(token){
         var result = {};
-        for(var i in this.challenges) {
-            if (!this.challenges.hasOwnProperty(i)) continue;
-            result[i] = {challengeID : this.challenges[i].id, baseUID : this.challenges[i].baseID};
+        for(var i in challengeManager.challenges) {
+            if (!challengeManager.challenges.hasOwnProperty(i)) continue;
+            result[i] = {challengeID : challengeManager.challenges[i].id, baseUID : challengeManager.challenges[i].baseID};
         }
         var outgoingMessage = {
             token : token,
@@ -108,16 +112,16 @@ function ChallengeManager() {
         wsSend(outgoingMessage)
     }
 
-    this.saveResult = function(challenge){
-        console.log(JSON.stringify(this.userdata));
-        if (this.userdata.loged === true){
+    this.saveResult = function(challenge, currentAnswer){
+        console.log(JSON.stringify(challengeManager.userdata));//! Пропали данные регистрации
+        if (challengeManager.userdata.loged === true){
             
             challenge.waitVerifyAnswer();
             var message = {stat : {
                     delay       : challenge.delay,
                     point       : challenge.bonus,
                     question    : challenge.question,
-                    answer      : challenge.answer
+                    answer      : currentAnswer
                 },
                 challengeID : challenge.id,
                 };
@@ -257,9 +261,9 @@ function ChallengeManagerMath() {
     
     this.addChallenge = function(name, initData){
         var id = Math.random();
-        var challenge = new ChallengeMath(name, this, id, initData);
+        var challenge = new ChallengeMath(name, challengeManager, id, initData);
         challenge.question = challenge.getOfflineQuestion();
-        this.challenges[id] = challenge;
+        challengeManager.challenges[id] = challenge;
         return challenge;
     };
     this.InitData = {
@@ -295,7 +299,7 @@ function Challenge(name, manager, id) {
 
     this.verifyAnswer = function(currentAnswer){
         
-        this.manager.saveResult(this);
+        challengeManager.saveResult(this, currentAnswer);
         
     };
     this.offlineVerifyAnswer = function(currentAnswer){
@@ -339,13 +343,11 @@ function Challenge(name, manager, id) {
         
         if (result.right){
             this.state = this.states.win;
-            if (result.combo)
-                this.level += 1;
-            else
-                this.level = 0;
+            this.lastTime = new Date();
             this.bonus = result.bonus; 
             this.score = result.score;
         }else{
+            this.lastTime = -1;
             this.state = this.states.lose;
             this.level = 0;
             this.bonus = 0; 
@@ -353,6 +355,8 @@ function Challenge(name, manager, id) {
         if (result.blocked){
             this.state = this.states.blocked;
         }
+        this.oldQuestion = result.oldQuestion;
+        this.level = result.level;
         
     };
     this.getOfflineQuestion = function(){
@@ -470,7 +474,9 @@ function ChallengeMath(name, manager, id, initData){
         
 
     };
-    
+    this.initQuestion = function(questionData){
+        this.question = new expression(questionData.firstOperand, questionData.secondOperand, questionData.operator);
+    }
 }
 
 sys = new sysObject();

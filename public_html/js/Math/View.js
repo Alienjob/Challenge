@@ -32,6 +32,20 @@ var rChallengeContainer = React.createClass({
     
     challenge : {},
     
+    //каждую секунду обновляем состояние
+    tick: function() {
+        if (this.flagTick === true)
+        {
+            clearInterval(this.interval);
+            this.interval = setInterval(this.tick, 1000)
+            this.flagTick = false;
+        }
+
+        this.setState({
+            cState: this.challenge
+        });
+    },
+    
     getInitialState: function() {
         return {
             cState  :   this.props.data
@@ -50,10 +64,20 @@ var rChallengeContainer = React.createClass({
                 cState: this.challenge
             });
             this.refs.scoreContainer.refs.comboContainer.initState(this.challenge.lastTime);
+
+            clearInterval(this.interval);
+            this.interval = setInterval(this.tick, 200);
+            this.flagTick = true;
         }
     },
     render: function() {
+    
     this.challenge = this.props.data;
+
+    clearInterval(this.interval);
+    this.interval = setInterval(this.tick, 1000)
+    this.flagTick = false;
+
     var className = "ChallengeContainer";
     if (this.state.cState.state === this.challenge.states.win)
         className = "ChallengeContainerWin";
@@ -61,10 +85,11 @@ var rChallengeContainer = React.createClass({
         className = "ChallengeContainerLose";
     if (this.state.cState.state === this.challenge.states.blocked)
         className = "ChallengeContainerBlocked";
+    var scoreData = {lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score};
     return (
         <panel className={className}>
           <rChallengeHeader data = {{name : this.state.cState.name, loged : challengeManager.userdata.loged}}/>
-          <rChallengeScoreContainer ref = 'scoreContainer' data = {{lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score}}/>
+          <rChallengeScoreContainer ref = 'scoreContainer' data = {scoreData}/>
           <rChallengeQuestion data = {this.state.cState.question.toString()}/>
           <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
           <rChallengeOldQuestion data = {this.state.cState.oldQuestion}/>
@@ -342,7 +367,7 @@ var rChallengeAnswer = React.createClass({
 //ChallengeOldQuestion
 var rChallengeOldQuestion = React.createClass({
   render: function() {
-    var cValue = "Old question";
+    var cValue = "Здесь будет показан предыдущий ответ";
     if(this.props.data !== undefined )
         cValue  = this.props.data;
      return (
