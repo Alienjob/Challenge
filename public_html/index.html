@@ -30,7 +30,11 @@ and open the template in the editor.
     <body>
         <div id="content">Для работы упражнений необходим javascript</div>
         <script type="text/jsx">
-            renderChallenge("Вычитание 7,8,9", "content", challengeManager.InitData.minus789); 
+            var challengeManager = new ChallengeManagerMath();
+            function callbackUlogin(token){
+               challengeManager.ulogin(token);
+            }
+            renderChallenge("Вычитание 7,8,9", "content", challengeManager.InitData.minus789, challengeManager); 
         </script>
     </body>
     
