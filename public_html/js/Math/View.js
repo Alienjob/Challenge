@@ -40,12 +40,12 @@ var rChallengeContainer = React.createClass({
             this.interval = setInterval(this.tick, 1000)
             this.flagTick = false;
         }
-
+        if ((!this.challenge.minimize) && (!this.challenge.showhelp) &&(!this.challenge.showstat))
+            this.refs.scoreContainer.refs.comboContainer.initState(this.challenge.lastTime, this.challenge.level);
         this.setState({
             cState: this.challenge
         });
     },
-    
     getInitialState: function() {
         return {
             cState  :   this.props.data
@@ -70,6 +70,37 @@ var rChallengeContainer = React.createClass({
             this.flagTick = true;
         }
     },
+    minimize: function(){
+        this.challenge.minimize = !(this.challenge.minimize);
+        this.setState({
+            cState: this.challenge
+        });
+    },
+    showhelp: function(){
+        if (this.challenge.showhelp){
+            this.challenge.showhelp = false;
+        }else{
+            this.challenge.showhelp = true;
+            this.challenge.showstat = false;
+        }
+        
+        this.setState({
+            cState: this.challenge
+        });
+    },
+    showstat: function(){
+        this.challenge.refreshStat();
+        if (this.challenge.showstat){
+            this.challenge.showstat = false;
+        }else{
+            this.challenge.showstat = true;
+            this.challenge.showhelp = false;
+        }
+        
+        this.setState({
+            cState: this.challenge
+        });
+    },
     render: function() {
     
     this.challenge = this.props.data;
@@ -85,10 +116,30 @@ var rChallengeContainer = React.createClass({
         className = "ChallengeContainerLose";
     if (this.state.cState.state === this.challenge.states.blocked)
         className = "ChallengeContainerBlocked";
-    var scoreData = {lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score};
+    var scoreData = {minimize : this.state.cState.minimize, lastTime : this.state.cState.lastTime, delayLimit : this.state.cState.delayLimit, level : this.state.cState.level, score : this.state.cState.score};
+    if (this.state.cState.showhelp)
+        return (
+        <panel className={className}>
+          <rChallengeHeader data = {{name : this.state.cState.name, loged : challengeManager.userdata.loged}} minimize={this.minimize} showhelp = {this.showhelp} showstat = {this.showstat}/>
+            <rChallengeHelpText/>
+        </panel>
+        );
+    if (this.state.cState.showstat) 
+    {
+        var data =  [['day', 'point']];
+        for(var i in this.state.cState.stat) {
+            data.push([this.state.cState.stat[i].day + '' ,this.state.cState.stat[i].point]);
+        }
+        return (
+        <panel className={className}>
+          <rChallengeHeader data = {{name : this.state.cState.name, loged : challengeManager.userdata.loged}} minimize={this.minimize} showhelp = {this.showhelp} showstat = {this.showstat}/>
+            <rChallengeShowStat data = {data} />
+        </panel>
+        );
+    }
     return (
         <panel className={className}>
-          <rChallengeHeader data = {{name : this.state.cState.name, loged : challengeManager.userdata.loged}}/>
+          <rChallengeHeader data = {{name : this.state.cState.name, loged : challengeManager.userdata.loged}} minimize={this.minimize} showhelp = {this.showhelp} showstat = {this.showstat}/>
           <rChallengeScoreContainer ref = 'scoreContainer' data = {scoreData}/>
           <rChallengeQuestion data = {this.state.cState.question.toString()}/>
           <rChallengeAnswer data = {this.state.cState.answer} onUserInput={this.handleUserInput} onUserKeyPress = {this.onUserKeyPress}/>
@@ -100,17 +151,21 @@ var rChallengeContainer = React.createClass({
 
 //ChallengeHeader
 var rChallengeHeader = React.createClass({
+  headerClick:function(){
+    this.props.minimize();
+  },
   render: function() {
     return (
-      <Well bsSize="small" className="ChallengeHeader">
+      <Well bsSize="small" className="ChallengeHeader" >
       <ButtonToolbar>
       <rChallengeName data = {this.props.data.name}/>
         <div  className="ChallengeButtonsGroup">
           <ButtonGroup  className="ChallengeButtonsGroup">
             <rChallengeLogin data = {this.props.data.loged} />
+            <rChallengeStat data = {this.props.data.loged} onClick = {this.props.showstat}/>
             <rChallengeSocial data = {this.props.data.loged}/>
-            <rChallengeStat data = {this.props.data.loged}/>
-            <rChallengeHelp/>
+            <rChallengeMinimize onClick = {this.headerClick}/>
+            <rChallengeHelp onClick = {this.props.showhelp}/>
         </ButtonGroup>
         </div>
       </ButtonToolbar>
@@ -122,12 +177,19 @@ var rChallengeHeader = React.createClass({
 //ChallengeScoreContainer
 var rChallengeScoreContainer = React.createClass({
   render: function() {
-    return (
-      <div  className="ChallengeScoreContainer">     
-        <rChallengeComboContainer  ref = 'comboContainer' data = {{lastTime : this.props.data.lastTime, delayLimit : this.props.data.delayLimit, level : this.props.data.level}} /> 
-        <rChallengeScore data = {this.props.data.score}/>
-      </div>
-    );
+    if (!this.props.data.minimize)  
+        return (
+          <div  className="ChallengeScoreContainer">     
+            <rChallengeComboContainer  ref = 'comboContainer' data = {{lastTime : this.props.data.lastTime, delayLimit : this.props.data.delayLimit, level : this.props.data.level}} /> 
+            <rChallengeScore data = {this.props.data.score}/>
+          </div>
+        );
+    else
+        return (
+          <div  className="ChallengeScoreContainer">     
+          </div>
+        );
+        
   }
   });
 
@@ -136,7 +198,7 @@ var rChallengeComboContainer = React.createClass({
   getInitialState: function() {
     return {slevel: 0, stime:100, sLastTime : -1};
   },
-  initState : function(lastTime){
+  initState : function(lastTime, level){
       var stime = 0;
       var slevel = 0;
       if (lastTime !==  this.state.sLastTime){
@@ -145,10 +207,11 @@ var rChallengeComboContainer = React.createClass({
             }
           else{
             stime = 100;
-            slevel = this.props.data.level; 
+            slevel = level; 
             clearInterval(this.interval);
             this.interval = setInterval(this.tick, 1000)
             } 
+        console.log("rChallengeComboContainer : initState " + JSON.stringify(this.state));
         this.setState({slevel: slevel, stime : stime, sLastTime : lastTime});
       }
   },
@@ -200,15 +263,30 @@ var rLogin = React.createClass({
       );
   }
 });  
+//ChallengeLogin
+var rSocial = React.createClass({
+  render: function() {
+    
+    return this.transferPropsTo(
+        <Modal title="Расскажите друзьям:">
+          <div className="modal-body">
+            <iframe className="plusoframe" src="pluso.html" ></iframe>
+         </div>
+        </Modal>
+      );
+  }
+});  
 
 var rChallengeLogin = React.createClass({
   render: function() {
+    
     if (this.props.data === true)
         return (
           <div className="ChallengeLogin">
           </div>
             );
     else
+    
         return (
           <div className="ChallengeLogin">
              <ModalTrigger modal={<rLogin />}> 
@@ -222,15 +300,19 @@ var rChallengeLogin = React.createClass({
 //ChallengeSocial
 var rChallengeSocial = React.createClass({
   render: function() {
-    if (this.props.data === false)
+    /*
+      if (this.props.data === false)
         return (
             <div className="ChallengeSocial" >
             </div>
               );
     else
+    */
         return (
             <div className="ChallengeSocial" >
+             <ModalTrigger modal={<rSocial />}> 
               <Button bsSize="xsmall"><Glyphicon glyph="comment" /></Button>
+             </ModalTrigger>
           </div>
         );
   }
@@ -247,18 +329,28 @@ var rChallengeStat = React.createClass({
     else
         return (
           <div className="ChallengeStat" >
-              <Button bsSize="xsmall"><Glyphicon glyph="signal" /></Button>
+              <Button bsSize="xsmall" onClick = {this.props.onClick}><Glyphicon glyph="signal" /></Button>
           </div>
         );
   }
   });
+
+var rChallengeMinimize = React.createClass({
+  render: function() {
+    return (
+      <div className="ChallengeMinimize">
+        <Button bsSize="xsmall"  onClick = {this.props.onClick} ><Glyphicon glyph="minus" /></Button>
+      </div>
+    );
+  }
+ });
 
 //ChallengeHelp
 var rChallengeHelp = React.createClass({
   render: function() {
     return (
       <div className="ChallengeHelp">
-          <Button bsSize="xsmall">?</Button>
+          <Button bsSize="xsmall" onClick = {this.props.onClick}>?</Button>
       </div>
     );
   }
@@ -378,3 +470,67 @@ var rChallengeOldQuestion = React.createClass({
   }
   });
 
+//ChallengeHelpText
+var rChallengeHelpText = React.createClass({
+  render: function() {
+     return (
+      <div className="ChallengeHelpText">
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня.
+        Если вам что-то непонятно - спросите меня
+      </div>
+    );
+  }
+  });
+
+//ChallengeShowStat
+var rChallengeShowStat = React.createClass({
+  render: function() {
+     
+     return (
+      <div className="ChallengeShowStat">
+        <GoogleLineChart data = {this.props.data} graphName = "graphName"/>
+      </div>
+    );
+  }
+  });
+var GoogleLineChart = React.createClass({
+  render: function(){
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(this.drawChart);
+    return React.DOM.div({id: this.props.graphName, style: {height: "500px"}});
+  },
+  componentDidUpdate: function(){
+    this.drawCharts();
+  },
+  drawCharts: function(){
+    var data = google.visualization.arrayToDataTable(this.props.data);
+    var options = {
+      title: 'ABC',
+    };
+ 
+    var chart = new google.visualization.ColumnChart(
+        document.getElementById(this.props.graphName)
+    );
+    chart.draw(data, options);
+  }
+});
+
+ 

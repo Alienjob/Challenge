@@ -45,10 +45,8 @@ function ChallengeManager() {
     }
     
     function beginMessage(message){
-        console.log(message);
         var pmessage = JSON.parse(message);
         if (pmessage.login !== undefined){
-            console.log('LOGIN');
             challengeManager.userdata = pmessage.userdata;
             challengeManager.userdata.loged = true;
             if (pmessage.challenges !== undefined)
@@ -59,7 +57,6 @@ function ChallengeManager() {
                         challengeManager.challenges[i].initQuestion(pmessage.challenges[i].question); 
                     }
             }
-            console.log(JSON.stringify(challengeManager.userdata));
 
         }
         if (pmessage.challenge !== undefined){
@@ -75,11 +72,9 @@ function ChallengeManager() {
             if (pmessage.stat !== undefined)
             {
                 challengeManager.challenges[id].stat = pmessage.stat;
-                console.log(id.toString() + ' stat ' + JSON.stringify(pmessage.stat));
             }
         }
-        if (pmessage.log !== undefined)
-        {
+        if (pmessage.log !== undefined){
             if (pmessage.challenge !== undefined)
                 console.log(pmessage.challenge.toString() + pmessage.log);
             else
@@ -113,7 +108,6 @@ function ChallengeManager() {
     }
 
     this.saveResult = function(challenge, currentAnswer){
-        console.log(JSON.stringify(challengeManager.userdata));//! Пропали данные регистрации
         if (challengeManager.userdata.loged === true){
             
             challenge.waitVerifyAnswer();
@@ -123,13 +117,25 @@ function ChallengeManager() {
                     question    : challenge.question,
                     answer      : currentAnswer
                 },
-                challengeID : challenge.id,
+                challengeID : challenge.id
                 };
             wsSend(message);
         
         }else{
             challenge.offlineVerifyAnswer(challenge.answer);
             challenge.question = challenge.getOfflineQuestion();
+        }
+
+    };
+    this.refreshStat = function(challenge){
+        if (challengeManager.userdata.loged === true){
+            
+            var message = {
+                query :'getStat',
+                challengeID : challenge.id
+                };
+            wsSend(message);
+        
         }
 
     };
@@ -296,6 +302,9 @@ function Challenge(name, manager, id) {
     this.baseID = 0;
     this.name = name;
     this.manager = manager;
+    this.minimize = false;
+    this.showhelp = false;
+    this.showstat = false;
 
     this.verifyAnswer = function(currentAnswer){
         
@@ -366,7 +375,10 @@ function Challenge(name, manager, id) {
         }
         return new expression();
     };
-
+    this.refreshStat = function(){
+        challengeManager.refreshStat(this);
+    }
+    
     this.state = this.states.neytral;
     this.question = this.getOfflineQuestion();
     this.answer = "";

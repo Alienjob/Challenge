@@ -21,6 +21,7 @@ and open the template in the editor.
         <script src="js/Math/Control.js"  type="text/jsx"></script>
         
         <script src="//ulogin.ru/js/ulogin.js"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
         <link rel="stylesheet" type="text/css" href="style/challenge.css" />
         <link rel="stylesheet" type="text/css" href="style/bootstrap.css" />
@@ -28,13 +29,16 @@ and open the template in the editor.
     
     </head>
     <body>
+        
         <div id="content">Для работы упражнений необходим javascript</div>
         <script type="text/jsx">
+            
             var challengeManager = new ChallengeManagerMath();
             function callbackUlogin(token){
                challengeManager.ulogin(token);
             }
             renderChallenge("Вычитание 7,8,9", "content", challengeManager.InitData.minus789, challengeManager); 
+            
         </script>
     </body>
     
